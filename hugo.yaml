@@ -1,0 +1,55 @@
+baseURL: https://ethanparmer.dev/
+locale: en-us
+title: Ethan Parmer
+theme: PaperMod
+
+enableRobotsTXT: true
+
+pagination:
+  pagerSize: 10
+
+outputs:
+  home: [HTML, RSS, JSON]
+
+params:
+  author: Ethan Parmer
+  description: Notes and writing by Ethan Parmer.
+  defaultTheme: auto
+
+  ShowReadingTime: true
+  ShowToc: true
+  TocOpen: false
+  ShowCodeCopyButtons: true
+  ShowPostNavLinks: true
+  ShowBreadCrumbs: true
+  ShowRssButtonInSectionTermList: true
+
+  # GoatCounter site code: https://ethanparmer.goatcounter.com
+  goatcounter: ethanparmer
+
+  homeInfoParams:
+    Title: Hi, I'm Ethan
+    Content: Welcome to my blog.
+
+  socialIcons:
+    - name: github
+      url: https://github.com/LordParmer
+    - name: linkedin
+      url: https://www.linkedin.com/in/ethan-parmer-mba-mha-chbap-a99718126/
+    - name: rss
+      url: /index.xml
+
+menu:
+  main:
+    - identifier: posts
+      name: Posts
+      url: /posts/
+      weight: 10
+    - identifier: about
+      name: About
+      url: /about/
+      weight: 20
+    - identifier: rss
+      name: RSS
+      url: /index.xml
+      weight: 30
