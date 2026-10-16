@@ -1,0 +1,22 @@
+{{- with site.Params.contact }}
+<section class="contact" aria-labelledby="contact-title">
+  <h2 class="section-label"><span>03</span> Get in touch</h2>
+  <div class="contact-body">
+    <p id="contact-title" class="contact-title">
+      Working on Databricks in a regulated industry? <em>Let's talk.</em>
+    </p>
+    <p class="contact-text">
+      Speaking, collaboration, or a hard data problem: I'm happy to hear about it.
+    </p>
+    <div class="hero-actions">
+      {{- with .email }}
+      <a class="btn btn-primary" href="mailto:{{ . }}">Email me <span aria-hidden="true">&rarr;</span></a>
+      {{- end }}
+      {{- with .linkedin }}
+      <a class="btn {{ if not site.Params.contact.email }}btn-primary{{ end }}" href="{{ . }}" target="_blank" rel="noopener me">Message on LinkedIn <span aria-hidden="true">&rarr;</span></a>
+      {{- end }}
+      <a class="btn" href="https://github.com/LordParmer" target="_blank" rel="noopener me">GitHub</a>
+    </div>
+  </div>
+</section>
+{{- end }}

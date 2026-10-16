@@ -1,0 +1,73 @@
+{{- with site.Params.hero }}
+<section class="hero" aria-label="Introduction">
+  <div class="hero-copy">
+    <p class="hero-kicker">
+      <span class="chip">{{ .role }}</span>
+      <span class="kicker-text">{{ .kicker }}</span>
+    </p>
+    <h1 class="hero-title">{{ .title | markdownify }}</h1>
+    <div class="hero-lead">{{ .lead | markdownify }}</div>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="{{ "posts/" | relURL }}">Read the writing <span aria-hidden="true">&rarr;</span></a>
+      <a class="btn" href="{{ "projects/" | relURL }}">View projects</a>
+    </div>
+    {{- partial "social_icons.html" (dict) }}
+  </div>
+
+  <figure class="hero-art{{ with .image }} has-portrait{{ end }}">
+    {{- $hero := . }}
+    {{- with .image }}
+    {{- with resources.Get . }}
+    {{- /* Full source width with a light unsharp mask, plus a smaller copy for
+      phones. Re-encoding also strips camera metadata from the published files. */}}
+    {{- $sharp := .Filter (images.UnsharpMask 1.1 0.7 0.02) }}
+    {{- $lg := $sharp.Process "webp q92" }}
+    {{- $sm := $sharp.Resize "800x webp q88" }}
+    <img class="hero-portrait" src="{{ $lg.RelPermalink }}" width="{{ $lg.Width }}" height="{{ $lg.Height }}"
+      srcset="{{ $sm.RelPermalink }} {{ $sm.Width }}w, {{ $lg.RelPermalink }} {{ $lg.Width }}w"
+      sizes="(max-width: 900px) 100vw, 580px"
+      alt="Portrait of {{ site.Params.author }}" fetchpriority="high"
+      data-face="{{ $hero.face | default "0.27,0.15,0.58,0.52" }}" data-shadow="{{ $hero.shadow | default "left" }}">
+    {{- end }}
+    {{- end }}
+    <canvas id="hero-art" aria-hidden="true"></canvas>
+    {{- if not .image }}
+    <figcaption><span>fig.01</span> generative study</figcaption>
+    {{- end }}
+  </figure>
+
+  <dl class="hero-meta">
+    {{- range .meta }}
+    <div>
+      <dt>{{ .label }}</dt>
+      <dd>
+        {{- with .items }}
+        {{- range $i, $item := . }}
+        {{- if $i }}<br>{{ end }}
+        {{- with $item.url }}<a href="{{ . }}" target="_blank" rel="noopener">{{ $item.name }}</a>{{ else }}{{ $item.name }}{{ end }}
+        {{- end }}
+        {{- else }}{{ .value }}{{ end -}}
+      </dd>
+    </div>
+    {{- end }}
+  </dl>
+</section>
+
+<section class="focus" aria-labelledby="focus-title">
+  <h2 id="focus-title" class="section-label"><span>01</span> What I work on</h2>
+  <div class="focus-grid">
+    {{- range $i, $f := .focus }}
+    <article class="focus-card">
+      <span class="focus-index">{{ printf "%02d" (add $i 1) }}</span>
+      <h3>{{ $f.title }}</h3>
+      <p>{{ $f.text }}</p>
+    </article>
+    {{- end }}
+  </div>
+</section>
+
+<h2 class="section-label latest-label">
+  <span>02</span> Latest writing
+  <a href="{{ "posts/" | relURL }}">All posts &rarr;</a>
+</h2>
+{{- end }}

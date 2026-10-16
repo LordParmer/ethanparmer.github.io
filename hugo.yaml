@@ -13,8 +13,26 @@ outputs:
 
 params:
   author: Ethan Parmer
-  description: Notes and writing by Ethan Parmer.
-  defaultTheme: auto
+  description: >
+    Ethan Parmer, Lead Data Engineer. Databricks lakehouses for GxP-regulated
+    healthcare, life sciences and finance.
+  defaultTheme: dark
+
+  # PNG icons and the link-preview card are generated at build time by
+  # layouts/_partials/brand-images.html.
+  assets:
+    favicon: /favicon.svg
+    favicon16x16: /favicon-16x16.png
+    favicon32x32: /favicon-32x32.png
+    apple_touch_icon: /apple-touch-icon.png
+    safari_pinned_tab: /favicon.svg
+  images: [og.jpg]
+
+  # Contact links for the homepage and About page. Add an email to show a
+  # mail button; it is left out until you choose one to publish.
+  contact:
+    email: ""
+    linkedin: https://www.linkedin.com/in/ethan-parmer-mba-mha-chbap-a99718126/
 
   ShowReadingTime: true
   ShowToc: true
@@ -23,13 +41,55 @@ params:
   ShowPostNavLinks: true
   ShowBreadCrumbs: true
   ShowRssButtonInSectionTermList: true
+  ShowShareButtons: false
 
   # GoatCounter site code: https://ethanparmer.goatcounter.com
   goatcounter: ethanparmer
 
+  # Turns on the homepage intro; its content comes from `hero` below.
   homeInfoParams:
-    Title: Hi, I'm Ethan
-    Content: Welcome to my blog.
+    Title: Ethan Parmer
+
+  # Homepage hero (layouts/_partials/home_info.html).
+  hero:
+    role: Lead Data Engineer
+    kicker: Databricks · GxP · Life Sciences · Finance
+    title: Engineering *trusted* data for regulated industries.
+    lead: >
+      I build **Databricks lakehouses** for healthcare, life sciences and
+      finance, where every pipeline has to be correct, traceable and
+      audit-ready. I go looking for the hardest problem in the room.
+    # Portrait under assets/. Rendered in greyscale with the generative art
+    # layered over it; leave empty to show the art on its own.
+    image: images/portrait.jpg
+    # Where the face sits in the photo (x0,y0,x1,y1 as fractions) and which
+    # side is in shadow; the art keeps clear of the face and paints that side.
+    face: "0.27,0.15,0.58,0.52"
+    shadow: left
+    meta:
+      - label: Platform
+        value: Databricks Lakehouse
+      - label: Domains
+        value: GxP · HCLS · Finance
+      - label: Standard
+        value: Validated by design
+      # An entry can list `items` instead of a `value`; each item links to
+      # its url when one is set (e.g. a Credly or Accredible badge).
+      - label: Databricks certified
+        items:
+          - name: Data Engineer Associate
+            url: https://credentials.databricks.com/7e143d93-24df-4276-bd68-521dfd63f1c9
+          - name: Data Engineer Professional
+            url: https://credentials.databricks.com/b8526e24-0e87-48e7-bc34-ff44e60a5bce
+    focus:
+      - title: Lakehouse engineering
+        text: Medallion architectures, Delta Lake, Unity Catalog and Lakeflow pipelines that scale without surprises.
+      - title: GxP & data integrity
+        text: Validated, auditable pipelines built around ALCOA+ principles, end-to-end lineage and controlled change.
+      - title: Healthcare & life sciences
+        text: Clinical, quality and operational data shaped into something teams can trust and act on.
+      - title: Finance
+        text: Governed, reconciled data for reporting where every number has to tie out.
 
   socialIcons:
     - name: github
@@ -39,17 +99,24 @@ params:
     - name: rss
       url: /index.xml
 
+  fuseOpts:
+    keys: [title, permalink, summary, content]
+
 menu:
   main:
     - identifier: posts
       name: Posts
       url: /posts/
       weight: 10
+    - identifier: projects
+      name: Projects
+      url: /projects/
+      weight: 20
     - identifier: about
       name: About
       url: /about/
-      weight: 20
+      weight: 30
     - identifier: rss
       name: RSS
       url: /index.xml
-      weight: 30
+      weight: 40

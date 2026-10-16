@@ -1,0 +1,9 @@
+{{- /* Usage: {{< callout type="gxp" title="The trap" >}}Markdown{{< /callout >}}
+  Types: note (default), gxp. */ -}}
+{{- $type := .Get "type" | default "note" }}
+<aside class="callout callout-{{ $type }}" role="note">
+  {{- with .Get "title" }}
+  <p class="callout-title">{{ . }}</p>
+  {{- end }}
+  <div class="callout-body">{{ .Inner | .Page.RenderString (dict "display" "block") }}</div>
+</aside>

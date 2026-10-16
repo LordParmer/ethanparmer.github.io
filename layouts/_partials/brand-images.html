@@ -1,0 +1,43 @@
+{{- /*
+  Builds the link-preview card and PNG app icons at build time and publishes
+  them at fixed paths (og.jpg, apple-touch-icon.png, favicon-*.png,
+  images/swipe.png) that hugo.yaml and custom.css point at. Called once via partialCached from extend_head.
+*/ -}}
+{{- $serif := resources.Get "fonts/InstrumentSerif-Regular.ttf" }}
+{{- $italic := resources.Get "fonts/InstrumentSerif-Italic.ttf" }}
+{{- $mono := resources.Get "fonts/JetBrainsMono.ttf" }}
+{{- $base := resources.Get "images/gen/base.png" }}
+{{- $swipe := resources.Get "images/gen/swipe.png" }}
+{{- $fade := resources.Get "images/gen/fade.png" }}
+{{- $ink := "#eceae4" }}
+{{- $muted := "#9b9da4" }}
+{{- $red := "#ff3b2b" }}
+
+{{- /* 1200x630 share card: copy on the left, portrait fading in on the right */}}
+{{- $filters := slice }}
+{{- with site.Params.hero.image }}
+  {{- with resources.Get . }}
+    {{- $p := .Fill "520x630 Center" | images.Filter images.Grayscale }}
+    {{- $filters = $filters | append (images.Overlay $p 680 0) (images.Overlay $fade 680 0) }}
+  {{- end }}
+{{- end }}
+{{- $filters = $filters | append
+  (images.Text "LEAD DATA ENGINEER  ·  DATABRICKS" (dict "font" $mono "size" 22 "color" $red "x" 64 "y" 72))
+  (images.Overlay ($swipe.Resize "540x") 52 268)
+  (images.Text "Ethan Parmer" (dict "font" $italic "size" 112 "color" $ink "x" 60 "y" 150))
+  (images.Text "Engineering trusted data" (dict "font" $serif "size" 54 "color" $muted "x" 64 "y" 370))
+  (images.Text "for regulated industries." (dict "font" $serif "size" 54 "color" $muted "x" 64 "y" 432))
+  (images.Text "ethanparmer.dev" (dict "font" $mono "size" 22 "color" $muted "x" 64 "y" 548))
+}}
+{{- $og := $base | images.Filter $filters }}
+{{- $_ := ($og.Process "jpg q86" | resources.Copy "og.jpg").Permalink }}
+
+{{- /* Square icon: italic E over the swipe, matching favicon.svg */}}
+{{- $icon := $base.Crop "180x180 TopLeft" | images.Filter
+  (images.Overlay ($swipe.Resize "160x30") 10 120)
+  (images.Text "E" (dict "font" $italic "size" 150 "color" $ink "x" 52 "y" -6))
+}}
+{{- $_ := ($swipe | resources.Copy "images/swipe.png").Permalink }}
+{{- $_ := ($icon | resources.Copy "apple-touch-icon.png").Permalink }}
+{{- $_ := ($icon.Resize "32x32" | resources.Copy "favicon-32x32.png").Permalink }}
+{{- $_ := ($icon.Resize "16x16" | resources.Copy "favicon-16x16.png").Permalink }}

@@ -1,0 +1,48 @@
+{{- /* Homepage: hero, focus areas, latest writing, contact. Post rows reuse
+  PaperMod's list markup so its styles and drafts hint still apply. */ -}}
+{{- define "main" }}
+
+{{- $pages := where site.RegularPages "Type" "in" site.Params.mainSections }}
+{{- $pages = where $pages "Params.hiddenInHomeList" "!=" "true" }}
+{{- $paginator := .Paginate $pages }}
+
+{{- if eq $paginator.PageNumber 1 }}
+{{- partial "home_info.html" . }}
+{{- end }}
+
+{{- range $paginator.Pages }}
+<article class="post-entry">
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">{{ .Title }}</h2>
+  </header>
+  {{- if ne (.Param "hideSummary") true }}
+  <div class="entry-content">
+    <p>{{ .Summary | plainify | htmlUnescape }}{{ if .Truncated }}...{{ end }}</p>
+  </div>
+  {{- end }}
+  <footer class="entry-footer">
+    {{- partial "post_meta.html" . -}}
+  </footer>
+  <a class="entry-link" aria-label="post link to {{ .Title | plainify }}" href="{{ .Permalink }}"></a>
+</article>
+{{- end }}
+
+{{- if lt (len $pages) 3 }}
+<p class="latest-note">
+  More writing on Databricks in regulated industries is on the way.
+  <a href="{{ "index.xml" | relURL }}">Follow via RSS</a>.
+</p>
+{{- end }}
+
+{{- if gt $paginator.TotalPages 1 }}
+<footer class="page-footer">
+  <nav class="pagination">
+    {{- with $paginator.Prev }}<a class="prev" href="{{ .URL | absURL }}">&laquo;&nbsp;{{ i18n "prev_page" }}</a>{{ end }}
+    {{- with $paginator.Next }}<a class="next" href="{{ .URL | absURL }}">{{ i18n "next_page" }}&nbsp;&raquo;</a>{{ end }}
+  </nav>
+</footer>
+{{- end }}
+
+{{- partial "contact.html" . }}
+
+{{- end }}
