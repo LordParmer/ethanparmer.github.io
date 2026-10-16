@@ -104,6 +104,11 @@ jobs:
             npm ci
           fi
 
+      - name: Draw post art
+        run: |
+          echo "Drawing post art that is missing or out of date..."
+          python3 tools/post_art.py
+
       - name: Cache restore
         id: cache-restore
         uses: actions/cache/restore@v6

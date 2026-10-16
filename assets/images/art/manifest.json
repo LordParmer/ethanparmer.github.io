@@ -1,0 +1,12 @@
+{
+  "posts": {
+    "gxp-ready-pipelines-on-databricks": {
+      "seed": "gxp-ready-pipelines-on-databricks",
+      "color": "#ff3b2b",
+      "accent": "#4fd6ec",
+      "topic": "gxp",
+      "label": "GxP · Databricks",
+      "version": 1
+    }
+  }
+}

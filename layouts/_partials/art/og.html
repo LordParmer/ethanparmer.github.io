@@ -1,0 +1,86 @@
+{{- /*
+  The 1200x630 share image for a post: its generated art, darkened on the
+  left under the topic, the title and the signature. Returns the JPEG
+  resource, or false when the post has no art. Used by
+  templates/_funcs/get-page-images.html for og:image and twitter:image.
+*/ -}}
+{{- $og := false }}
+{{- with partialCached "art/spec.html" . .Path }}
+  {{- $serif := resources.Get "fonts/InstrumentSerif-Regular.ttf" }}
+  {{- $italic := resources.Get "fonts/InstrumentSerif-Italic.ttf" }}
+  {{- $mono := resources.Get "fonts/JetBrainsMono.ttf" }}
+  {{- $base := resources.Get "images/gen/base.png" }}
+  {{- $fade := resources.Get "images/gen/fade.png" }}
+  {{- $swipe := resources.Get "images/gen/swipe.png" }}
+  {{- $ink := "#eceae4" }}
+  {{- $muted := "#9b9da4" }}
+
+  {{- /* The title, broken into lines of even length so no word is left on
+    its own, with articles, prepositions and conjunctions kept with the word
+    after them; at the largest size where that takes at most three lines of
+    the 660px column. Instrument Serif averages about 0.39em per character. */}}
+  {{- $title := $.Title | plainify | htmlUnescape }}
+  {{- $n := strings.RuneCount $title }}
+  {{- $short := slice "a" "an" "the" "of" "on" "in" "to" "at" "by" "for" "and" "or" "&" "vs" }}
+  {{- $words := slice }}
+  {{- range split $title " " }}{{ with . }}{{ $words = $words | append . }}{{ end }}{{ end }}
+  {{- $tokens := slice }}
+  {{- $carry := "" }}
+  {{- range $i, $w := $words }}
+    {{- $joined := printf "%s%s" $carry $w }}
+    {{- $carry = "" }}
+    {{- if and (in $short (lower $w)) (lt (add $i 1) (len $words)) }}
+      {{- $carry = printf "%s " $joined }}
+    {{- else }}
+      {{- $tokens = $tokens | append $joined }}
+    {{- end }}
+  {{- end }}
+  {{- $size := 0 }}
+  {{- $lines := slice }}
+  {{- range slice 84 76 68 60 52 46 }}
+    {{- $size = . }}
+    {{- $cap := math.Floor (div 660.0 (mul 0.39 .)) }}
+    {{- $target := div (float $n) (math.Ceil (div (float $n) $cap)) }}
+    {{- $lines = slice }}
+    {{- $line := "" }}
+    {{- range $tokens }}
+      {{- if not $line }}
+        {{- $line = . }}
+      {{- else if gt (add (strings.RuneCount $line) 1 (strings.RuneCount .)) $cap }}
+        {{- $lines = $lines | append $line }}
+        {{- $line = . }}
+      {{- else }}
+        {{- $line = printf "%s %s" $line . }}
+      {{- end }}
+      {{- if ge (strings.RuneCount $line) $target }}
+        {{- $lines = $lines | append $line }}
+        {{- $line = "" }}
+      {{- end }}
+    {{- end }}
+    {{- with $line }}{{ $lines = $lines | append . }}{{ end }}
+    {{- if le (len $lines) 3 }}{{ break }}{{ end }}
+  {{- end }}
+
+  {{- /* Drawn on a clear canvas the width of the column, so a line that is
+    still too long wraps there (images.Text wraps 20px short of the edge)
+    instead of running into the art; centred between topic and signature. */}}
+  {{- $leading := math.Round (mul $size 0.12) }}
+  {{- $clear := $base.Crop "680x460 TopLeft" | images.Filter (images.Opacity 0) }}
+  {{- $titleImg := $clear | images.Filter (images.Text (delimit $lines "\n") (dict
+    "font" $serif "size" $size "color" $ink "x" 0 "y" 0 "linespacing" $leading)) }}
+  {{- $titleY := int (sub 270 (div (mul (len $lines) (add (mul $size 0.87) $leading)) 2)) }}
+
+  {{- $shade := $base.Crop "540x630 TopLeft" | images.Filter (images.Opacity 0.74) }}
+  {{- $edge := $fade.Resize "320x630" | images.Filter (images.Opacity 0.74) }}
+  {{- $og = .image | images.Filter
+    (images.Overlay $shade 0 0)
+    (images.Overlay $edge 540 0)
+    (images.Text (upper .label) (dict "font" $mono "size" 21 "color" .color "x" 64 "y" 62))
+    (images.Overlay $titleImg 60 $titleY)
+    (images.Overlay ($swipe.Resize "250x") 54 553)
+    (images.Text "Ethan Parmer" (dict "font" $italic "size" 46 "color" $ink "x" 62 "y" 505))
+    (images.Text "ethanparmer.dev" (dict "font" $mono "size" 19 "color" $muted "x" 340 "y" 532))
+  }}
+  {{- $og = $og.Process "jpg q84" }}
+{{- end }}
+{{- return $og }}

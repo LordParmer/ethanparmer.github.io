@@ -1,0 +1,29 @@
+{{- /*
+  A post's generated art as a list thumbnail (variant "card") or as the image
+  at the top of the post (variant "header"). Renders nothing when the post has
+  no art. The art is decorative, so the alt text is empty.
+  Usage: partial "art/figure.html" (dict "page" . "variant" "card")
+*/ -}}
+{{- with partialCached "art/spec.html" .page .page.Path }}
+{{- $img := .image }}
+{{- if eq $.variant "header" }}
+  {{- $sm := $img.Resize "720x webp q80" }}
+  {{- $lg := $img.Process "webp q80" }}
+<figure class="post-art post-art-header">
+  <img src="{{ $lg.RelPermalink }}" srcset="{{ $sm.RelPermalink }} {{ $sm.Width }}w, {{ $lg.RelPermalink }} {{ $lg.Width }}w"
+    sizes="(max-width: 768px) calc(100vw - 28px), 700px" width="{{ $lg.Width }}" height="{{ $lg.Height }}"
+    alt="" fetchpriority="high">
+</figure>
+{{- else }}
+  {{- /* Thumbnails are small, so they zoom in on the right of the frame,
+    where the paint always is; same proportions as the share image. */}}
+  {{- $crop := $img.Crop "840x441 Right" }}
+  {{- $sm := $crop.Resize "480x webp q76" }}
+  {{- $md := $crop.Resize "800x webp q76" }}
+<figure class="post-art post-art-card">
+  <img src="{{ $sm.RelPermalink }}" srcset="{{ $sm.RelPermalink }} {{ $sm.Width }}w, {{ $md.RelPermalink }} {{ $md.Width }}w"
+    sizes="(max-width: 560px) calc(100vw - 28px), 220px" width="{{ $sm.Width }}" height="{{ $sm.Height }}"
+    alt="" loading="lazy" decoding="async">
+</figure>
+{{- end }}
+{{- end }}

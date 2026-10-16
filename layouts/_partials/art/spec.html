@@ -1,0 +1,23 @@
+{{- /*
+  The generated artwork for a post (drawn by tools/post_art.py), as a dict:
+  image (the 1200x630 PNG resource), color, accent, label. Returns false for
+  pages outside the main sections, pages that set cover.image, and posts the
+  script has not drawn yet. Call with partialCached "art/spec.html" . .Path.
+*/ -}}
+{{- $art := false }}
+{{- if and .IsPage .File (in site.Params.mainSections .Section) (not .Params.cover.image) }}
+  {{- $key := .Params.slug | default .File.ContentBaseName }}
+  {{- /* GetMatch rather than Get: a running hugo server only picks up art
+    drawn after it started through the glob lookup. */}}
+  {{- $spec := false }}
+  {{- with resources.GetMatch "images/art/manifest.json" }}
+    {{- $spec = index (transform.Unmarshal .).posts $key }}
+  {{- end }}
+  {{- $image := resources.GetMatch (printf "images/art/%s.png" $key) }}
+  {{- if and $spec $image }}
+    {{- $art = merge $spec (dict "image" $image) }}
+  {{- else }}
+    {{- warnf "%s has no generated art yet: run python tools/post_art.py" .File.Path }}
+  {{- end }}
+{{- end }}
+{{- return $art }}

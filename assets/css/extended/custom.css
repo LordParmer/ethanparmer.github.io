@@ -627,6 +627,166 @@ code, pre, kbd {
     white-space: nowrap;
 }
 
+/* ---------- Post art (tools/post_art.py, layouts/_partials/art/) ---------- */
+
+.post-art {
+    margin: 0;
+    overflow: hidden;
+    aspect-ratio: 1200 / 630;
+    background: #0b0c0f;
+}
+
+.post-art img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* List thumbnails, in the same frame as the share image. A post's own
+   cover.image gets the same frame. */
+.post-entry > .entry-cover {
+    display: block;
+    aspect-ratio: 1200 / 630;
+    overflow: hidden;
+    margin: 0;
+}
+
+.post-entry > .entry-cover img {
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0;
+}
+
+.post-art-card,
+.post-entry > .entry-cover {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+.post-entry > :is(.post-art-card, .entry-cover) img {
+    transition: transform 0.5s ease;
+}
+
+.post-entry:hover > :is(.post-art-card, .entry-cover) img {
+    transform: scale(1.04);
+}
+
+/* /posts/ and tag pages: thumbnail on the right of the text */
+.post-entry:has(> :is(.post-art-card, .entry-cover)) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    column-gap: 32px;
+    align-items: start;
+}
+
+.post-entry:has(> :is(.post-art-card, .entry-cover)) > * {
+    grid-column: 1;
+}
+
+.post-entry > :is(.post-art-card, .entry-cover) {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: start;
+    margin-top: 6px;
+}
+
+/* Homepage rows: number, text, thumbnail; the date moves under the summary */
+.main:has(.hero) .post-entry:has(> :is(.post-art-card, .entry-cover)) {
+    grid-template-columns: 80px minmax(0, 1fr) 220px;
+}
+
+.main:has(.hero) .post-entry:has(> :is(.post-art-card, .entry-cover))::before {
+    grid-row: 1 / span 3;
+}
+
+.main:has(.hero) .post-entry:has(> :is(.post-art-card, .entry-cover)) > * {
+    grid-column: 2;
+}
+
+.main:has(.hero) .post-entry > :is(.post-art-card, .entry-cover) {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+}
+
+.main:has(.hero) .post-entry:has(> :is(.post-art-card, .entry-cover)) .entry-footer {
+    grid-row: 3;
+    white-space: normal;
+}
+
+/* At the top of a post. On ink the art's background is the page colour, so
+   the edges fade and the streams run off into the page; on paper it is a print. */
+.post-art-header {
+    margin: 8px 0 36px;
+}
+
+:root[data-theme="dark"] .post-art-header {
+    -webkit-mask-image:
+        linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%),
+        linear-gradient(to bottom, #000 0, #000 86%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+        linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%),
+        linear-gradient(to bottom, #000 0, #000 86%, transparent 100%);
+    mask-composite: intersect;
+}
+
+:root[data-theme="light"] .post-art-header {
+    border-radius: 3px;
+    box-shadow: 0 28px 60px -32px rgba(19, 19, 19, 0.45);
+}
+
+@media (max-width: 900px) {
+    .main:has(.hero) .post-entry:has(> :is(.post-art-card, .entry-cover)) {
+        grid-template-columns: 48px minmax(0, 1fr) 160px;
+    }
+
+    .post-entry:has(> :is(.post-art-card, .entry-cover)) {
+        grid-template-columns: minmax(0, 1fr) 160px;
+        column-gap: 24px;
+    }
+}
+
+/* Phones: the thumbnail goes full width above the title */
+@media (max-width: 560px) {
+    .post-entry:has(> :is(.post-art-card, .entry-cover)) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .main:has(.hero) .post-entry:has(> :is(.post-art-card, .entry-cover)) {
+        grid-template-columns: 48px minmax(0, 1fr);
+    }
+
+    .post-entry > :is(.post-art-card, .entry-cover),
+    .main:has(.hero) .post-entry > :is(.post-art-card, .entry-cover) {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        margin: 0 0 18px;
+    }
+
+    .main:has(.hero) .post-entry:has(> :is(.post-art-card, .entry-cover))::before {
+        grid-row: 2 / span 3;
+    }
+
+    .main:has(.hero) .post-entry:has(> :is(.post-art-card, .entry-cover)) .entry-footer {
+        grid-row: 4;
+    }
+
+    .post-art-header {
+        margin: 4px 0 28px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .post-entry > :is(.post-art-card, .entry-cover) img {
+        transition: none;
+    }
+
+    .post-entry:hover > :is(.post-art-card, .entry-cover) img {
+        transform: none;
+    }
+}
+
 .page-header h1 {
     font-family: var(--font-serif);
     font-weight: 400;
