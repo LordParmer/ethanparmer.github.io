@@ -15,7 +15,6 @@
   </div>
 
   <figure class="hero-art{{ with .image }} has-portrait{{ end }}">
-    {{- $hero := . }}
     {{- with .image }}
     {{- with resources.Get . }}
     {{- /* Full source width with a light unsharp mask, plus a smaller copy for
@@ -26,12 +25,12 @@
     <img class="hero-portrait" src="{{ $lg.RelPermalink }}" width="{{ $lg.Width }}" height="{{ $lg.Height }}"
       srcset="{{ $sm.RelPermalink }} {{ $sm.Width }}w, {{ $lg.RelPermalink }} {{ $lg.Width }}w"
       sizes="(max-width: 900px) 100vw, 580px"
-      alt="Portrait of {{ site.Params.author }}" fetchpriority="high"
-      data-face="{{ $hero.face | default "0.27,0.15,0.58,0.52" }}" data-shadow="{{ $hero.shadow | default "left" }}">
+      alt="Portrait of {{ site.Params.author }}" fetchpriority="high">
     {{- end }}
     {{- end }}
-    <canvas id="hero-art" aria-hidden="true"></canvas>
+    {{- /* The generative art only runs when there is no portrait */}}
     {{- if not .image }}
+    <canvas id="hero-art" aria-hidden="true"></canvas>
     <figcaption><span>fig.01</span> generative study</figcaption>
     {{- end }}
   </figure>

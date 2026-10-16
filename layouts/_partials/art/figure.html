@@ -16,7 +16,7 @@
 </figure>
 {{- else }}
   {{- /* Thumbnails are small, so they zoom in on the right of the frame,
-    where the paint always is; same proportions as the share image. */}}
+    where the point of light always is; same proportions as the share image. */}}
   {{- $crop := $img.Crop "840x441 Right" }}
   {{- $sm := $crop.Resize "480x webp q76" }}
   {{- $md := $crop.Resize "800x webp q76" }}

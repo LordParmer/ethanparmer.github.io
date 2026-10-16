@@ -59,13 +59,9 @@ params:
       I build **Databricks lakehouses** for healthcare, life sciences and
       finance, where every pipeline has to be correct, traceable and
       audit-ready. I go looking for the hardest problem in the room.
-    # Portrait under assets/. Rendered in greyscale with the generative art
-    # layered over it; leave empty to show the art on its own.
+    # Portrait under assets/, rendered in greyscale and blended into the page.
+    # Leave empty to show a generative study (assets/js/hero-art.js) instead.
     image: images/portrait.jpg
-    # Where the face sits in the photo (x0,y0,x1,y1 as fractions) and which
-    # side is in shadow; the art keeps clear of the face and paints that side.
-    face: "0.27,0.15,0.58,0.52"
-    shadow: left
     meta:
       - label: Platform
         value: Databricks Lakehouse

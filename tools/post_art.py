@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Draws the artwork for each post: one 1200x630 PNG per post in
 assets/images/art/, in the visual language of the homepage hero
-(assets/js/hero-art.js): spray-paint hits over flowing data streams.
+(assets/js/hero-art.js): flowing data streams that meet at a soft point of
+light. No paint splatter or drips: next to the portrait they read as blood.
 
 Hugo turns each PNG into the post's list thumbnail, its header image and its
 share image (layouts/_partials/art/). The PNGs are committed, so a Hugo build
@@ -9,12 +10,12 @@ needs nothing but Hugo; the deploy workflow also runs this script first, so a
 post pushed without its art still gets it.
 
 A post's picture is seeded by its slug (front matter `slug`, else the file or
-bundle name), so editing the title never changes it. The paint colour comes
+bundle name), so editing the title never changes it. The light colour comes
 from the post's tags (see TOPICS). Front matter can override both:
 
     art:
       seed: "any text"     # a different composition
-      color: "#4fd6ec"     # paint colour
+      color: "#4fd6ec"     # colour of the point of light
       accent: "#f2c14e"    # colour of the highlighted streams
 
 Posts with `cover.image` keep their own image and get no art.
@@ -43,14 +44,14 @@ OUT = ROOT / "assets" / "images" / "art"
 MANIFEST = OUT / "manifest.json"
 
 # Bump after changing the drawing code to redraw every post.
-VERSION = 1
+VERSION = 2
 
 W, H = 1200, 630
 BACKGROUND = "#0b0c0f"
 INK = "#eceae4"
 RED, CYAN, GOLD = "#ff3b2b", "#4fd6ec", "#f2c14e"
 
-# Paint colour and highlighted-stream colour per topic. The first topic that
+# Light colour and highlighted-stream colour per topic. The first topic that
 # shares a tag with the post wins; posts with none of these tags get DEFAULT.
 # `label` is the line above the title on the share image.
 TOPICS = [
@@ -257,49 +258,31 @@ def spline(pts, steps=24):
 
 # ------------------------------------------------------------------- drawing
 
-def spray_hit(canvas, rnd, x, y, r, color, drips=4, angle=-0.4):
-    """sprayHit from hero-art.js, scaled from its ~45px radius: soft mist, a
-    dense uneven core, flecks thrown along the spray direction, and drips that
-    run, thin out and end in a bead."""
-    k = r / 45
-    m = canvas.mask()
-    # The mist keeps the hero's fine grain at this size, so it needs more dots;
-    # the core blobs get soft edges so they read as spray, not circles.
-    for _ in range(int(3200 * k * k)):
-        a, d = rnd() * TAU, abs(gauss(rnd)) * r * 3.4
-        s = (0.5 + rnd()) * 0.9
-        m.square(x + math.cos(a) * d, y + math.sin(a) * d * 0.85, s, 0.04 + 0.3 * max(0, 1 - d / (r * 3.4)))
-    for _ in range(320):
-        a, d = rnd() * TAU, abs(gauss(rnd)) * r * 0.95
-        rad = r * (0.06 + rnd() * 0.16)
-        m.disc(x + math.cos(a) * d, y + math.sin(a) * d * 0.8, rad, 0.22, soft=max(1.0, rad * 0.8))
-    for _ in range(46):
-        a = angle + gauss(rnd) * 1.4
-        d = r * (1.1 + rnd() * rnd() * 3)
-        s = 0.5 * k + rnd() * r * 0.035
-        m.ellipse(x + math.cos(a) * d, y + math.sin(a) * d, s * (1 + rnd() * 1.6), s, a, 0.85)
-    for _ in range(drips):
-        dx = x + gauss(rnd) * r * 0.7
-        dy = y + r * (0.3 + rnd() * 0.35)
-        length = r * (0.5 + rnd() * rnd() * 4.5)
-        w = 0.9 * k + rnd() * r * 0.07
-        steps = max(1, math.ceil(length / 3))
-        drip = canvas.mask()
-        for _ in range(steps):
-            nx, ny = dx + (rnd() - 0.5) * 0.5, dy + length / steps
-            drip.segment(dx, dy, nx, ny, w, 1.0)
-            dx, dy = nx, ny
-            w = max(0.7 * k, w * 0.985)
-        drip.disc(dx, dy, w * 1.25, 1.0, union=True)
-        for i, a in drip.items():
-            m.add(i, a * 0.9)
-    canvas.paint(m, color)
+def glow(canvas, x, y, r, color):
+    """A soft point of light where the streams meet: a wide, faint halo in
+    the topic colour around a small warm-white core. Diffuse on purpose, so it
+    reads as light rather than a hard dot."""
+    w, h = canvas.w, canvas.h
+    halo = canvas.mask()
+    reach = r * 3.2
+    for py in range(max(0, int(y - reach)), min(h, int(y + reach) + 1)):
+        dy = (py + 0.5 - y) / r
+        row = py * w
+        for px in range(max(0, int(x - reach)), min(w, int(x + reach) + 1)):
+            dx = (px + 0.5 - x) / r
+            d2 = dx * dx + dy * dy
+            if d2 < 10.24:
+                halo.union(row + px, 0.42 * math.exp(-d2 * 0.55))
+    canvas.paint(halo, color)
+    core = canvas.mask()
+    core.disc(x, y, r * 0.16, 1.0, soft=r * 0.22)
+    canvas.paint(core, INK, 0.85)
 
 
 def streams_for(mode, rnd, w, h, hit):
     """Control points for each data stream. Every stream runs left to right
     and stays calm under the text side of the share image; the shape happens
-    on the right, around the paint."""
+    on the right, around the point of light."""
     n = 7 + int(rnd() * 5)
     hx, hy, hr = hit
     out = []
@@ -315,7 +298,7 @@ def streams_for(mode, rnd, w, h, hit):
             out.append([(-10, y0), (w * 0.3, lerp(y0, wy, 0.25) + gauss(rnd) * h * 0.03),
                         (wx, wy + f * waist * 2), (w * 0.9, lerp(wy, y1, 0.7)), (w + 10, y1)])
     elif mode == "gather":
-        # Streams run into the paint and leave it as a tighter bundle.
+        # Streams run into the light and leave it as a tighter bundle.
         spread = h * (0.12 + rnd() * 0.2)
         for i in range(n):
             f = i / (n - 1) - 0.5
@@ -349,7 +332,7 @@ def compose(seed, color, accent, w=W, h=H):
     rnd = make_rng(seed)
     canvas = Canvas(w, h, BACKGROUND)
 
-    # The main hit sits on the right, clear of the share image's text column.
+    # The point of light sits on the right, clear of the share image's text column.
     r = h * (0.1 + rnd() * 0.04)
     hx, hy = w * (0.68 + rnd() * 0.18), h * (0.22 + rnd() * 0.22)
     mode = ("funnel", "gather", "fan", "braid")[int(rnd() * 4)]
@@ -364,14 +347,7 @@ def compose(seed, color, accent, w=W, h=H):
         canvas.paint(m, accent if hot else INK, 0.6 if hot else 0.17)
         streams.append(line)
 
-    spray_hit(canvas, rnd, hx, hy, r, color, drips=3 + int(rnd() * 4), angle=-0.2 - rnd() * 1.9)
-
-    # A small echo in the accent colour, low on the right and away from the hit.
-    for _ in range(20):
-        ex, ey = w * (0.5 + rnd() * 0.45), h * (0.66 + rnd() * 0.2)
-        if math.hypot(ex - hx, ey - hy) > r * 3:
-            break
-    spray_hit(canvas, rnd, ex, ey, r * (0.22 + rnd() * 0.14), accent, drips=1 + int(rnd() * 2))
+    glow(canvas, hx, hy, r, color)
 
     # Packets moving along the streams, each with a fading trail behind it.
     for _ in range(18 + int(rnd() * 16)):
@@ -515,8 +491,8 @@ def spec_for(key, matter, where):
     if accent:
         accent = check_color(accent, where)
     else:
-        # Default accent, unless the paint colour was overridden to something
-        # close to it; then the site colour furthest from the paint.
+        # Default accent, unless the light colour was overridden to something
+        # close to it; then the site colour furthest from the light.
         accent = topic["accent"]
         if sum((a - b) ** 2 for a, b in zip(hex_rgb(color), hex_rgb(accent))) < 90 ** 2:
             accent = max((RED, CYAN, GOLD), key=lambda c: sum((a - b) ** 2 for a, b in zip(hex_rgb(color), hex_rgb(c))))
