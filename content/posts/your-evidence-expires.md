@@ -164,7 +164,7 @@ for name in GXP_TABLES:
 
 ## Capture run context the platform doesn't
 
-System tables can tell you a run happened. They can't tell you which commit of your code it ran, because no dynamic value reference exposes the Git commit. So stamp it at deploy time and record it at run time. In the bundle:
+System tables can tell you a run happened. Delta history goes a step further: for a commit written from a Lakeflow job, its `job` column records the `jobId` and `jobRunId`. Neither can tell you which commit of your code the run executed, and no dynamic value reference exposes the Git commit. So stamp it at deploy time and record it at run time. In the bundle:
 
 ```yaml
 parameters:
@@ -193,7 +193,7 @@ ctx = json.dumps({"job_run_id": dbutils.widgets.get("job_run_id"),
 df.write.option("userMetadata", ctx).mode("append").saveAsTable("gxp.silver.consumption")
 ```
 
-Use the `userMetadata` writer option rather than the `spark.databricks.delta.commitInfo.userMetadata` Spark conf. The conf isn't supported on serverless. If your jobs run from a Git source instead of a deployed bundle, the Jobs API returns the commit for each run as `git_source.git_snapshot.used_commit`.
+Use the `userMetadata` writer option rather than the `spark.databricks.delta.commitInfo.userMetadata` Spark conf. The conf isn't supported on serverless. Create GxP tables through DDL before the first write. When I tested on serverless, the option was recorded on appends but dropped from the commit where `saveAsTable` created the table. If your jobs run from a Git source instead of a deployed bundle, the Jobs API returns the commit for each run as `git_source.git_snapshot.used_commit`.
 
 Each repair adds a row with a higher `repair_count`, so a repaired run shows every attempt instead of overwriting the first.
 
@@ -202,7 +202,7 @@ Each repair adds a row with a higher `repair_count`, so a repaired run shows eve
 The point of all this is that the evidence joins together without anyone reconstructing it from memory:
 
 - GxP rows carry the job run ID or pipeline `update_id` (the first post's gap 5).
-- Delta commits carry the same ID in `userMetadata`.
+- Delta commits carry the same ID in `job.jobRunId`, and the code version in `userMetadata`.
 - `job_run_timeline.run_id` and `run_context.job_run_id` match it.
 - `jobs` joins on `(workspace_id, job_id)` as of the run's start time.
 - Audit events for the job are filtered on `service_name = 'jobs'`.
@@ -266,7 +266,7 @@ Pick a date older than the platform's retention, once your layer is that old. Co
 ```sql
 WITH commits AS (
   SELECT version, timestamp, userName, operation, operationMetrics,
-         userMetadata:job_run_id::string AS job_run_id
+         job.jobRunId AS job_run_id
   FROM gxp_evidence.history.table_commits
   WHERE table_full_name = 'gxp.silver.batch_records_history'
     AND timestamp >= TIMESTAMP'2025-06-12' AND timestamp < TIMESTAMP'2025-06-13'
@@ -280,7 +280,7 @@ runs AS (
   GROUP BY workspace_id, job_id, run_id
 ),
 job_as_of AS (
-  SELECT r.run_id, j.name AS job_name, j.run_as, j.change_time AS definition_as_of
+  SELECT r.run_id, j.name AS job_name, j.run_as_user_name AS run_as, j.change_time AS definition_as_of
   FROM runs r
   JOIN gxp_evidence.lakeflow.jobs j
     ON j.workspace_id = r.workspace_id AND j.job_id = r.job_id
@@ -297,17 +297,22 @@ LEFT JOIN gxp_evidence.history.run_context x   ON x.job_run_id = c.job_run_id
 ORDER BY c.version;
 ```
 
-Then find who touched that job in the month before:
+Then find who touched that job in the month before. The job ID sits in a different place depending on the event. When I tested, I found four:
 
 ```sql
 SELECT event_time, user_identity.email, action_name, request_params
 FROM gxp_evidence.audit.platform_audit
 WHERE service_name = 'jobs'
-  AND action_name IN ('create', 'update', 'reset', 'runNow', 'changeJobAcl')
-  AND request_params['job_id'] = '<job_id from the result above>'
   AND event_date BETWEEN DATE'2025-05-12' AND DATE'2025-06-12'
+  AND '<job_id from the result above>' IN (
+        request_params['job_id'],         -- reset, update, runNow
+        request_params['jobId'],          -- runStart, runSucceeded
+        request_params['resourceId'],     -- changeJobAcl
+        response.result:job_id::string)   -- create
 ORDER BY event_time;
 ```
+
+A bundle deployment shows up as `reset` with the full `new_settings`, not as `update`. That's useful: the audit row holds the complete job definition that was deployed. Run events such as `runStart` record the user as `unknown`. The person who started the run is in `request_params['runCreatorUserName']`.
 
 The acceptance criteria are written before the run. Every commit on that date resolves to a run. Every run resolves to a job definition and a code version. Every change to the job resolves to a named identity. Any `NULL` in a join is a finding. Record it, investigate it and fix the capture. A rehearsal that never finds anything probably isn't testing hard enough.
 
