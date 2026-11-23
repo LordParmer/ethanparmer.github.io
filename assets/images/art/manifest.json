@@ -7,6 +7,14 @@
       "topic": "gxp",
       "label": "GxP · Databricks",
       "version": 2
+    },
+    "your-evidence-expires": {
+      "seed": "your-evidence-expires",
+      "color": "#ff3b2b",
+      "accent": "#4fd6ec",
+      "topic": "gxp",
+      "label": "GxP · Databricks",
+      "version": 2
     }
   }
 }
